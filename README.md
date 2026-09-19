@@ -165,7 +165,7 @@ Official standalone production packages are automatically built and verified for
 ### Prerequisites
 - **CMake** (v3.20 or newer)
 - **C++17 Compiler** (Clang 15+, GCC 11+, or MSVC 2019+)
-- **Qt 6** (6.5 or newer with `Core`, `Gui`, `Quick`, `QuickControls2`, `QuickEffects`)
+- **Qt 6** (6.5 or newer with `Core`, `Gui`, `Quick`, `QuickControls2`)
 - **Ninja** build tool (recommended)
 
 ### macOS (Homebrew)
