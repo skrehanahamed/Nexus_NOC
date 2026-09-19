@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![Nexus NOC Logo](assets/branding/nexus_logo.png)
+<img src="assets/branding/nexus_logo.png" alt="Nexus NOC" width="580"/>
 
 ### Production-Grade Network Operations & Infrastructure Intelligence Console
 
@@ -19,6 +19,12 @@
 <br/>
 
 <sub>Made by <b>Sk Rehan Ahamed</b> with the help of <b>Antigravity</b> and <b>ChatGPT</b></sub>
+
+<br/><br/>
+
+[![Nexus NOC Main Console](docs/screenshots/01_overview_dashboard.png)](https://github.com/skrehanahamed/Nexus_NOC)
+
+*Real-Time Operations & Control Console displaying live network telemetry, hardware resources, gateway diagnostics, and interactive topology map.*
 
 </div>
 
