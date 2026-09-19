@@ -38,7 +38,7 @@ jobs:
         uses: jurplel/install-qt-action@v3
         with:
           version: '6.6.2'
-          arch: 'linux_gcc_64'
+          arch: 'gcc_64'
           cache: true
 
       - name: Configure CMake
