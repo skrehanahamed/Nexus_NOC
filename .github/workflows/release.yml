@@ -65,13 +65,13 @@ jobs:
 
   build-linux:
     name: Build Linux Release (Ubuntu)
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Install Dependencies
+      - name: Install System Dependencies
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
@@ -82,18 +82,24 @@ jobs:
             ninja-build \
             libgl1-mesa-dev \
             libxkbcommon-dev \
-            qt6-base-dev \
-            qt6-declarative-dev \
-            qt6-declarative-dev-tools \
-            qml6-module-qtquick \
-            qml6-module-qtquick-controls \
-            qml6-module-qtquick-layouts \
-            qml6-module-qtquick-effects \
+            libxkbcommon-x11-dev \
+            libegl1-mesa-dev \
+            libfontconfig1-dev \
+            libfreetype6-dev \
             tar gzip
+
+      - name: Setup Qt 6
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: '6.6.2'
+          arch: 'linux_gcc_64'
+          cache: true
 
       - name: Configure CMake
         run: |
-          cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_PREFIX_PATH="$QT_ROOT_DIR"
 
       - name: Build Application
         run: |
