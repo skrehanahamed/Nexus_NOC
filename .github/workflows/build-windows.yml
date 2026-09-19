@@ -1,0 +1,60 @@
+name: Windows Build
+
+on:
+  push:
+    branches: [ main, master ]
+    tags:
+      - 'v*.*.*'
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    name: Build (Windows / MSVC / Qt 6)
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Ninja
+        uses: ashutoshvarma/setup-ninja@master
+        with:
+          version: 1.11.1
+
+      - name: Setup MSVC Environment
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Install Qt 6
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: '6.6.2'
+          host: 'windows'
+          target: 'desktop'
+          arch: 'win64_msvc2019_64'
+          modules: 'qtquickeffects'
+
+      - name: Configure CMake
+        run: |
+          cmake -B build -G Ninja `
+            -DCMAKE_BUILD_TYPE=Release `
+            -DCMAKE_PREFIX_PATH="$env:QT_ROOT_DIR"
+
+      - name: Build Target
+        run: |
+          cmake --build build --config Release
+
+      - name: Windows Qt Deployment (windeployqt)
+        run: |
+          $windeployqt = "$env:QT_ROOT_DIR\bin\windeployqt.exe"
+          if (Test-Path $windeployqt) {
+            & $windeployqt --qmldir qml build\bin\NexusNOC.exe
+          }
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: NexusNOC-Windows-Package
+          path: build/bin/*
+          if-no-files-found: warn

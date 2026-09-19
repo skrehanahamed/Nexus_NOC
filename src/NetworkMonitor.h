@@ -1,0 +1,102 @@
+#pragma once
+
+#include <QObject>
+#include <QTimer>
+#include <QProcess>
+#include <QVariantList>
+
+class NetworkMonitor : public QObject {
+    Q_OBJECT
+    Q_PROPERTY(double rxRateMbps READ rxRateMbps NOTIFY ratesChanged)
+    Q_PROPERTY(double txRateMbps READ txRateMbps NOTIFY ratesChanged)
+    Q_PROPERTY(double latencyMs READ latencyMs NOTIFY latencyChanged)
+    Q_PROPERTY(double packetLoss READ packetLoss NOTIFY latencyChanged)
+    Q_PROPERTY(double jitterMs READ jitterMs NOTIFY latencyChanged)
+    Q_PROPERTY(QString primaryInterface READ primaryInterface CONSTANT)
+    Q_PROPERTY(QVariantList trafficHistoryDl READ trafficHistoryDl NOTIFY historyChanged)
+    Q_PROPERTY(QVariantList trafficHistoryUl READ trafficHistoryUl NOTIFY historyChanged)
+    Q_PROPERTY(QVariantList latencyHistory READ latencyHistory NOTIFY latencyChanged)
+    Q_PROPERTY(QString wifiSsid READ wifiSsid NOTIFY wifiChanged)
+    Q_PROPERTY(int wifiSignalDbm READ wifiSignalDbm NOTIFY wifiChanged)
+    Q_PROPERTY(int wifiSignalBars READ wifiSignalBars NOTIFY wifiChanged)
+    Q_PROPERTY(QString linkSpeed READ linkSpeed NOTIFY wifiChanged)
+    Q_PROPERTY(bool wifiConnected READ wifiConnected NOTIFY wifiChanged)
+    Q_PROPERTY(bool ethernetConnected READ ethernetConnected NOTIFY ethernetChanged)
+    Q_PROPERTY(QString ethernetIp READ ethernetIp NOTIFY ethernetChanged)
+    Q_PROPERTY(QString ethernetSpeed READ ethernetSpeed NOTIFY ethernetChanged)
+    Q_PROPERTY(QString ethernetDuplex READ ethernetDuplex NOTIFY ethernetChanged)
+    Q_PROPERTY(bool internetConnected READ internetConnected NOTIFY latencyChanged)
+
+public:
+    explicit NetworkMonitor(QObject *parent = nullptr);
+
+    double rxRateMbps() const { return m_rxRateMbps; }
+    double txRateMbps() const { return m_txRateMbps; }
+    double latencyMs() const { return m_latencyMs; }
+    double packetLoss() const { return m_packetLoss; }
+    double jitterMs() const { return m_jitterMs; }
+    QString primaryInterface() const { return m_primaryInterface; }
+    QVariantList trafficHistoryDl() const { return m_trafficHistoryDl; }
+    QVariantList trafficHistoryUl() const { return m_trafficHistoryUl; }
+    QVariantList latencyHistory() const { return m_latencyHistory; }
+    QString wifiSsid() const { return m_wifiSsid; }
+    int wifiSignalDbm() const { return m_wifiSignalDbm; }
+    int wifiSignalBars() const { return m_wifiSignalBars; }
+    QString linkSpeed() const { return m_linkSpeed; }
+    bool wifiConnected() const { return m_wifiConnected; }
+    bool ethernetConnected() const { return m_ethernetConnected; }
+    QString ethernetIp() const { return m_ethernetIp; }
+    QString ethernetSpeed() const { return m_ethernetSpeed; }
+    QString ethernetDuplex() const { return m_ethernetDuplex; }
+    bool internetConnected() const { return m_packetLoss < 100.0 && m_latencyMs > 0; }
+
+signals:
+    void ratesChanged();
+    void latencyChanged();
+    void historyChanged();
+    void wifiChanged();
+    void ethernetChanged();
+
+private slots:
+    void tick();
+    void samplePing();
+
+private:
+    void sampleThroughput();
+    void sampleWifiInfo();
+    void sampleWifiInfoSync();
+    void detectEthernet();
+
+    double m_rxRateMbps = 0.0;
+    double m_txRateMbps = 0.0;
+    double m_latencyMs = 0.0;
+    double m_packetLoss = 0.0;
+    double m_jitterMs = 0.0;
+    QString m_primaryInterface = "en0";
+
+    uint64_t m_prevRxBytes = 0;
+    uint64_t m_prevTxBytes = 0;
+    qint64 m_prevSampleTime = 0;
+    int m_tickCounter = 0;
+
+    QVariantList m_trafficHistoryDl;
+    QVariantList m_trafficHistoryUl;
+    QVariantList m_latencyHistory;
+
+    QString m_wifiSsid;
+    int m_wifiSignalDbm = 0;
+    int m_wifiSignalBars = 0;
+    QString m_linkSpeed;
+    bool m_wifiConnected = false;
+
+    bool m_ethernetConnected = false;
+    QString m_ethernetIp = "Not Assigned";
+    QString m_ethernetSpeed = "—";
+    QString m_ethernetDuplex = "—";
+
+    QTimer *m_timer;
+    QTimer *m_pingTimer;
+    QTimer *m_wifiTimer;
+    QProcess *m_pingProcess;
+    QProcess *m_wifiProcess;
+};

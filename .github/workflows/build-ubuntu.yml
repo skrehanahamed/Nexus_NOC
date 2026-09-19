@@ -1,0 +1,55 @@
+name: Ubuntu Linux Build
+
+on:
+  push:
+    branches: [ main, master ]
+    tags:
+      - 'v*.*.*'
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build-ubuntu:
+    name: Build (Ubuntu 24.04 / Qt 6.4+)
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install System and Qt 6 Dependencies
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            build-essential \
+            cmake \
+            ninja-build \
+            libgl1-mesa-dev \
+            libxkbcommon-dev \
+            qt6-base-dev \
+            qt6-declarative-dev \
+            qt6-declarative-dev-tools \
+            qml6-module-qtquick \
+            qml6-module-qtquick-controls \
+            qml6-module-qtquick-layouts \
+            qml6-module-qtquick-effects \
+            qml6-module-qtquick-templates
+
+      - name: Configure CMake
+        run: |
+          cmake -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build Target
+        run: |
+          cmake --build build --config Release -j$(nproc)
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: NexusNOC-Ubuntu-Binary
+          path: build/bin/NexusNOC*
+          if-no-files-found: warn

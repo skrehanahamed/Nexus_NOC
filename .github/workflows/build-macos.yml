@@ -1,0 +1,42 @@
+name: macOS Build
+
+on:
+  push:
+    branches: [ main, master ]
+    tags:
+      - 'v*.*.*'
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build-macos:
+    name: Build (macOS / Native Homebrew Qt)
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Qt 6 and Dependencies via Homebrew
+        run: |
+          brew update --quiet
+          brew install qt ninja cmake
+          echo "CMAKE_PREFIX_PATH=$(brew --prefix qt)" >> $GITHUB_ENV
+
+      - name: Configure CMake
+        run: |
+          cmake -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_PREFIX_PATH="${{ env.CMAKE_PREFIX_PATH }}"
+
+      - name: Build Target
+        run: |
+          cmake --build build --config Release -j$(sysctl -n hw.ncpu)
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: NexusNOC-macOS-Bundle
+          path: build/bin/NexusNOC*
+          if-no-files-found: warn

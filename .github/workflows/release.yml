@@ -1,0 +1,219 @@
+name: Multi-Platform Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Release tag name (e.g. v1.0.0)'
+        required: false
+        default: 'v1.0.0'
+
+permissions:
+  contents: write
+
+jobs:
+  build-macos:
+    name: Build macOS Release
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Qt 6 and Dependencies via Homebrew
+        run: |
+          brew update --quiet
+          brew install qt ninja cmake
+          echo "CMAKE_PREFIX_PATH=$(brew --prefix qt)" >> $GITHUB_ENV
+
+      - name: Configure CMake
+        run: |
+          cmake -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_PREFIX_PATH="${{ env.CMAKE_PREFIX_PATH }}"
+
+      - name: Build Application
+        run: |
+          cmake --build build --config Release -j$(sysctl -n hw.ncpu)
+
+      - name: Package macOS Binary
+        run: |
+          mkdir -p package/NexusNOC-macOS
+          cp -r build/bin/NexusNOC package/NexusNOC-macOS/
+          chmod +x package/NexusNOC-macOS/NexusNOC
+          
+          # Deploy Qt frameworks if macdeployqt is available
+          QT_PATH="$(brew --prefix qt)"
+          if [ -f "$QT_PATH/bin/macdeployqt" ]; then
+            "$QT_PATH/bin/macdeployqt" package/NexusNOC-macOS/NexusNOC -qmldir=qml || true
+          fi
+          
+          cd package
+          zip -r ../NexusNOC-${{ github.ref_name || inputs.tag_name || 'v1.0.0' }}-macOS.zip NexusNOC-macOS/
+          cd ..
+
+      - name: Upload macOS Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-release-pkg
+          path: NexusNOC-*-macOS.zip
+
+  build-linux:
+    name: Build Linux Release (Ubuntu)
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            build-essential \
+            cmake \
+            ninja-build \
+            libgl1-mesa-dev \
+            libxkbcommon-dev \
+            qt6-base-dev \
+            qt6-declarative-dev \
+            qt6-declarative-dev-tools \
+            qml6-module-qtquick \
+            qml6-module-qtquick-controls \
+            qml6-module-qtquick-layouts \
+            qml6-module-qtquick-effects \
+            tar gzip
+
+      - name: Configure CMake
+        run: |
+          cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build Application
+        run: |
+          cmake --build build --config Release -j$(nproc)
+
+      - name: Package Linux Binary
+        run: |
+          mkdir -p package/NexusNOC-Ubuntu-x86_64
+          cp build/bin/NexusNOC package/NexusNOC-Ubuntu-x86_64/
+          chmod +x package/NexusNOC-Ubuntu-x86_64/NexusNOC
+          
+          echo '#!/bin/bash' > package/NexusNOC-Ubuntu-x86_64/run.sh
+          echo 'DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"' >> package/NexusNOC-Ubuntu-x86_64/run.sh
+          echo 'export LD_LIBRARY_PATH="$DIR:$LD_LIBRARY_PATH"' >> package/NexusNOC-Ubuntu-x86_64/run.sh
+          echo '"$DIR/NexusNOC" "$@"' >> package/NexusNOC-Ubuntu-x86_64/run.sh
+          chmod +x package/NexusNOC-Ubuntu-x86_64/run.sh
+          
+          cd package
+          tar -czf ../NexusNOC-${{ github.ref_name || inputs.tag_name || 'v1.0.0' }}-Ubuntu-x86_64.tar.gz NexusNOC-Ubuntu-x86_64/
+          cd ..
+
+      - name: Upload Linux Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-release-pkg
+          path: NexusNOC-*-Ubuntu-x86_64.tar.gz
+
+  build-windows:
+    name: Build Windows Release
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Ninja
+        uses: ashutoshvarma/setup-ninja@master
+        with:
+          version: 1.11.1
+
+      - name: Setup MSVC Environment
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Install Qt 6
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: '6.6.2'
+          host: 'windows'
+          target: 'desktop'
+          arch: 'win64_msvc2019_64'
+          modules: 'qtquickeffects'
+
+      - name: Configure CMake
+        run: |
+          cmake -B build -G Ninja `
+            -DCMAKE_BUILD_TYPE=Release `
+            -DCMAKE_PREFIX_PATH="$env:QT_ROOT_DIR"
+
+      - name: Build Application
+        run: |
+          cmake --build build --config Release
+
+      - name: Package Windows Binary
+        shell: pwsh
+        run: |
+          mkdir package\NexusNOC-Windows-x64
+          cp build\bin\NexusNOC.exe package\NexusNOC-Windows-x64\
+          
+          $windeployqt = "$env:QT_ROOT_DIR\bin\windeployqt.exe"
+          if (Test-Path $windeployqt) {
+            & $windeployqt --qmldir qml package\NexusNOC-Windows-x64\NexusNOC.exe
+          }
+          
+          $tag = if ($env:GITHUB_REF_NAME) { $env:GITHUB_REF_NAME } else { "v1.0.0" }
+          Compress-Archive -Path package\NexusNOC-Windows-x64\* -DestinationPath "NexusNOC-$tag-Windows-x64.zip"
+
+      - name: Upload Windows Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-release-pkg
+          path: NexusNOC-*-Windows-x64.zip
+
+  publish-release:
+    name: Publish GitHub Release
+    needs: [build-macos, build-linux, build-windows]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'release' || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Download macOS Package
+        uses: actions/download-artifact@v4
+        with:
+          name: macos-release-pkg
+          path: release-assets/
+
+      - name: Download Linux Package
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-release-pkg
+          path: release-assets/
+
+      - name: Download Windows Package
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-release-pkg
+          path: release-assets/
+
+      - name: List Release Assets
+        run: |
+          ls -la release-assets/
+
+      - name: Create GitHub Release & Upload Assets
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name || inputs.tag_name || 'v1.0.0' }}
+          name: Nexus NOC ${{ github.ref_name || inputs.tag_name || 'v1.0.0' }} Production Release
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          files: |
+            release-assets/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
