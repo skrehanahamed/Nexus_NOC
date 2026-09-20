@@ -3,6 +3,8 @@
 #include <QDebug>
 #include <QDateTime>
 #include <QtMath>
+#include <QFile>
+#include <QTextStream>
 
 #ifdef Q_OS_UNIX
 #include <sys/types.h>
