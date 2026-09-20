@@ -216,35 +216,35 @@ jobs:
           cd ..
           
           cat << EOF > release-notes.md
-          ## 🌐 Nexus NOC Production Release (${TAG})
+          ## Nexus NOC Production Release (${TAG})
           
           **Nexus NOC (Network Operations Center)** is an enterprise hardware-tailored appliance console built with **C++17** and **Qt 6 / QML**. This release includes standalone pre-packaged binaries for **macOS**, **Ubuntu Linux**, and **Windows**.
 
           ---
 
-          ### 📦 Pre-Built Release Packages
+          ### Pre-Built Release Packages
 
           | Platform | Package File | Architecture | Toolchain / Environment |
           | :--- | :--- | :--- | :--- |
-          | **macOS** | \`NexusNOC-\${TAG}-macOS.zip\` | Universal (Apple Silicon & Intel) | AppleClang, Qt 6.x (Bundled via macdeployqt) |
-          | **Ubuntu / Linux** | \`NexusNOC-\${TAG}-Ubuntu-x86_64.tar.gz\` | Linux x86_64 | GNU GCC 11+, Qt 6.6.2 (Self-contained launcher) |
-          | **Windows** | \`NexusNOC-\${TAG}-Windows-x64.zip\` | Windows x64 | MSVC 2019/2022, Qt 6.6.2 (Bundled via windeployqt) |
+          | <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/apple/apple-original.svg" width="18" height="18" valign="middle" alt="macOS" /> **macOS** | \`NexusNOC-\${TAG}-macOS.zip\` | Universal (Apple Silicon & Intel) | AppleClang, Qt 6.x (Bundled via macdeployqt) |
+          | <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/linux/linux-original.svg" width="18" height="18" valign="middle" alt="Linux" /> **Ubuntu / Linux** | \`NexusNOC-\${TAG}-Ubuntu-x86_64.tar.gz\` | Linux x86_64 | GNU GCC 11+, Qt 6.6.2 (Self-contained launcher) |
+          | <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/windows8/windows8-original.svg" width="18" height="18" valign="middle" alt="Windows" /> **Windows** | \`NexusNOC-\${TAG}-Windows-x64.zip\` | Windows x64 | MSVC 2019/2022, Qt 6.6.2 (Bundled via windeployqt) |
 
           ---
 
-          ### 🚀 Quick Start & Installation
+          ### Installation & Quick Start
 
-          ####  macOS
+          #### <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/apple/apple-original.svg" width="18" height="18" valign="middle" alt="macOS" /> macOS
           1. Download \`NexusNOC-\${TAG}-macOS.zip\` and extract it.
           2. Open Terminal and run:
              \`\`\`bash
              cd NexusNOC-macOS
              ./NexusNOC
              \`\`\`
-          > **Tip:** If macOS Gatekeeper prompts an unverified developer warning, run:  
+          > **Note:** If macOS Gatekeeper prompts an unverified developer warning, run:  
           > \`xattr -cr NexusNOC-macOS\`
 
-          #### 🐧 Ubuntu / Linux
+          #### <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/linux/linux-original.svg" width="18" height="18" valign="middle" alt="Linux" /> Ubuntu / Linux
           1. Download \`NexusNOC-\${TAG}-Ubuntu-x86_64.tar.gz\` and extract it:
              \`\`\`bash
              tar -xzf NexusNOC-\${TAG}-Ubuntu-x86_64.tar.gz
@@ -252,15 +252,15 @@ jobs:
              ./run.sh
              \`\`\`
 
-          #### 🪟 Windows (10 / 11)
+          #### <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/windows8/windows8-original.svg" width="18" height="18" valign="middle" alt="Windows" /> Windows (10 / 11)
           1. Download and unzip \`NexusNOC-\${TAG}-Windows-x64.zip\`.
           2. Double-click \`NexusNOC.exe\` to launch the console.
 
           ---
 
-          ### 🔒 Checksums (SHA-256)
+          ### Package Integrity Checksums (SHA-256)
 
-          Verify package integrity using the computed SHA-256 checksums:
+          Verify downloaded archives using standard SHA-256 tools:
 
           \`\`\`text
           EOF
@@ -272,11 +272,11 @@ jobs:
 
           ---
 
-          ### 🛠️ Build & Architecture Info
-          - **UI Framework:** Qt 6 (Qt Quick, QML, QtQuick Controls 2, QtQuick Layouts)
-          - **Language Standard:** C++17
-          - **Build System:** CMake 3.20+ & Ninja
-          - **Native Performance:** Fully compiled native binaries with hardware-accelerated rendering
+          ### Technical Specifications & Build Environment
+          - **UI Engine:** Qt 6 (Qt Quick, QML, QtQuick Controls 2, QtQuick Layouts)
+          - **C++ Standard:** C++17
+          - **Build System:** CMake 3.20+ with Ninja Generator
+          - **Rendering Pipeline:** Native hardware-accelerated scene graph (OpenGL / Metal / Direct3D)
           - **Architect & Developer:** [Sk Rehan Ahamed](https://github.com/skrehanahamed)
           - **License:** [MIT License](LICENSE)
           EOF
