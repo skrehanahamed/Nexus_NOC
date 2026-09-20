@@ -81,6 +81,8 @@ qt_add_qml_module(NexusNOC
         qml/assets/topo_phone.png
         qml/assets/topo_tv.png
         qml/assets/topo_iot.png
+        qml/assets/topo_camera.png
+        qml/assets/topo_server.png
         qml/assets/topo_rpi_board.png
         qml/assets/alert_bell_red.png
         qml/assets/alert_bell_amber.png

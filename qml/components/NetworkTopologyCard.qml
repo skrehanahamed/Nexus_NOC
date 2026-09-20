@@ -21,6 +21,11 @@ Rectangle {
     property var selectedDevice: null
     property real pulsePhase: 0.0
 
+    // Dynamic bindings to real C++ DeviceManager
+    property var deviceList: (typeof deviceManager !== "undefined" && deviceManager && deviceManager.devices.length > 0) ? deviceManager.devices : []
+    property int deviceCount: (typeof deviceManager !== "undefined" && deviceManager) ? deviceManager.totalDeviceCount : 0
+    property bool hasInternet: (typeof networkMonitor !== "undefined" && networkMonitor) ? networkMonitor.internetConnected : true
+
     color: "#0C1322"
     border.color: "#1E293B"
     border.width: 1
@@ -36,9 +41,9 @@ Rectangle {
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 16
-        spacing: 12
+        spacing: 10
 
-        // Header Row
+        // Header Row: Title + Live Device Count Badge + Auto Layout Toggle
         RowLayout {
             Layout.fillWidth: true
             spacing: 10
@@ -55,6 +60,26 @@ Rectangle {
                 font.bold: true
                 font.family: Theme.fontSans
                 color: Theme.textPrimary
+            }
+
+            // Live Device Count Badge
+            Rectangle {
+                height: 22
+                implicitWidth: countText.implicitWidth + 14
+                radius: 11
+                color: "#0E243A"
+                border.color: Theme.accentCyan
+                border.width: 1
+
+                Text {
+                    id: countText
+                    anchors.centerIn: parent
+                    text: root.deviceCount > 0 ? (root.deviceCount + " Devices") : "Scanning..."
+                    font.pixelSize: 10
+                    font.bold: true
+                    font.family: Theme.fontMono
+                    color: Theme.accentCyan
+                }
             }
 
             Item { Layout.fillWidth: true }
@@ -127,56 +152,56 @@ Rectangle {
                     ctx.clearRect(0, 0, w, h);
                     if (w <= 0 || h <= 0) return;
 
-                    var cx = w * 0.42; // Center axis of tree
+                    var cx = w * 0.44; // Center axis of topology
                     var yInternet = h * 0.12;
                     var yRouter = h * 0.32;
                     var yPi = h * 0.52;
                     var yClients = h * 0.82;
-                    var xServer = w * 0.80;
-                    var yServer = h * 0.45;
+                    var xServer = w * 0.82;
+                    var yServer = h * 0.48;
 
                     ctx.lineWidth = 1.5;
 
-                    // 1. Internet -> Router
+                    // 1. Internet -> Router (Dashed WAN line)
                     ctx.strokeStyle = "#00E5FF";
                     ctx.setLineDash([4, 4]);
                     ctx.beginPath();
-                    ctx.moveTo(cx, yInternet + 16);
-                    ctx.lineTo(cx, yRouter - 16);
+                    ctx.moveTo(cx, yInternet + 18);
+                    ctx.lineTo(cx, yRouter - 18);
                     ctx.stroke();
 
                     // Pulse packet
-                    var p1y = (yInternet + 16) + (yRouter - 32 - yInternet) * root.pulsePhase;
+                    var p1y = (yInternet + 18) + (yRouter - 36 - yInternet) * root.pulsePhase;
                     ctx.beginPath();
                     ctx.arc(cx, p1y, 3, 0, Math.PI * 2);
                     ctx.fillStyle = "#00E5FF";
                     ctx.fill();
 
-                    // 2. Router -> Raspberry Pi
+                    // 2. Router -> NEXUS NOC / Raspberry Pi (Solid high-speed backbone)
                     ctx.setLineDash([]);
                     ctx.strokeStyle = "#00E5FF";
                     ctx.beginPath();
-                    ctx.moveTo(cx, yRouter + 16);
+                    ctx.moveTo(cx, yRouter + 18);
                     ctx.lineTo(cx, yPi - 18);
                     ctx.stroke();
 
                     // Pulse packet
-                    var p2y = (yRouter + 16) + (yPi - 34 - yRouter) * root.pulsePhase;
+                    var p2y = (yRouter + 18) + (yPi - 36 - yRouter) * root.pulsePhase;
                     ctx.beginPath();
                     ctx.arc(cx, p2y, 3, 0, Math.PI * 2);
                     ctx.fillStyle = "#10B981";
                     ctx.fill();
 
-                    // 3. Raspberry Pi -> Server Rack (Dotted branch)
+                    // 3. NEXUS NOC -> Storage / Server Rack (Branch)
                     ctx.setLineDash([3, 3]);
                     ctx.strokeStyle = "#38BDF8";
                     ctx.beginPath();
                     ctx.moveTo(cx + 42, yPi);
                     ctx.lineTo(xServer, yPi);
-                    ctx.lineTo(xServer, yServer + 20);
+                    ctx.lineTo(xServer, yServer - 22);
                     ctx.stroke();
 
-                    // 4. Raspberry Pi -> 5 Client Devices (Solid tree bus)
+                    // 4. NEXUS NOC -> Client Devices Bus
                     ctx.setLineDash([]);
                     ctx.strokeStyle = "#0284C7";
                     ctx.beginPath();
@@ -184,19 +209,19 @@ Rectangle {
                     ctx.lineTo(cx, h * 0.68);
                     ctx.stroke();
 
-                    // Horizontal bus
-                    var xStart = w * 0.10;
-                    var xEnd = w * 0.74;
+                    // Horizontal Bus across client devices
+                    var numClients = Math.max(1, clientRow.children.length);
+                    var xStart = w * 0.08;
+                    var xEnd = w * 0.78;
                     ctx.beginPath();
                     ctx.moveTo(xStart, h * 0.68);
                     ctx.lineTo(xEnd, h * 0.68);
                     ctx.stroke();
 
-                    // Drops to each client
-                    var clientCols = 5;
-                    var spacing = (xEnd - xStart) / (clientCols - 1);
-                    for (var i = 0; i < clientCols; i++) {
-                        var devX = xStart + i * spacing;
+                    // Vertical drops to each client device node
+                    var step = numClients > 1 ? (xEnd - xStart) / (numClients - 1) : 0;
+                    for (var i = 0; i < numClients; i++) {
+                        var devX = numClients > 1 ? (xStart + i * step) : cx;
                         ctx.beginPath();
                         ctx.moveTo(devX, h * 0.68);
                         ctx.lineTo(devX, yClients - 24);
@@ -212,14 +237,14 @@ Rectangle {
                 }
             }
 
-            // --- Top Node: Internet / Globe ---
+            // --- Node 1: Internet / Globe ---
             Rectangle {
                 id: nodeInternet
-                width: 48
-                height: 48
-                radius: 24
+                width: 46
+                height: 46
+                radius: 23
                 anchors.horizontalCenter: parent.horizontalCenter
-                anchors.horizontalCenterOffset: -parent.width * 0.08
+                anchors.horizontalCenterOffset: -parent.width * 0.06
                 anchors.top: parent.top
                 anchors.topMargin: 4
                 color: "#071B2F"
@@ -234,10 +259,10 @@ Rectangle {
                     smooth: true
                 }
 
-                // Green Status Dot
+                // Green Online Indicator
                 Rectangle {
                     width: 9; height: 9; radius: 4.5
-                    color: Theme.statusSuccess
+                    color: root.hasInternet ? Theme.statusSuccess : Theme.statusCritical
                     border.color: "#0C1322"; border.width: 1.5
                     anchors.bottom: parent.bottom
                     anchors.right: parent.right
@@ -246,11 +271,11 @@ Rectangle {
                 MouseArea {
                     anchors.fill: parent
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: root.deviceSelected({ name: "Internet WAN Gateway", ip: "1.1.1.1", type: "Gateway", connection: "Fiber WAN", status: "Online" })
+                    onClicked: root.deviceSelected({ name: "Internet Gateway", ip: "1.1.1.1", type: "Gateway", connection: "Fiber WAN", online: root.hasInternet })
                 }
             }
 
-            // --- Second Node: Router ---
+            // --- Node 2: Router ---
             Rectangle {
                 id: nodeRouter
                 width: 52
@@ -282,16 +307,16 @@ Rectangle {
                 MouseArea {
                     anchors.fill: parent
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: root.deviceSelected({ name: "Core Gateway Router", ip: "192.168.1.1", type: "Router", connection: "Gigabit Ethernet", status: "Online" })
+                    onClicked: root.deviceSelected({ name: "Default Gateway Router", ip: "192.168.1.254", type: "Gateway", connection: "Gigabit Ethernet", online: true })
                 }
             }
 
-            // --- Third Node: Raspberry Pi / NEXUS NOC ---
+            // --- Node 3: NEXUS NOC / Raspberry Pi ---
             Rectangle {
                 id: nodePi
-                width: 74
-                height: 38
-                radius: 19
+                width: 78
+                height: 40
+                radius: 20
                 anchors.horizontalCenter: nodeInternet.horizontalCenter
                 anchors.top: parent.top
                 anchors.topMargin: parent.height * 0.48
@@ -299,17 +324,13 @@ Rectangle {
                 border.color: "#00E5FF"
                 border.width: 1.5
 
-                RowLayout {
+                Image {
                     anchors.centerIn: parent
-                    spacing: 4
-
-                    Image {
-                        width: 20
-                        height: 20
-                        source: "qrc:/qt/qml/NexusNOC/qml/assets/raspberry_pi_logo.png"
-                        fillMode: Image.PreserveAspectFit
-                        smooth: true
-                    }
+                    width: 26
+                    height: 26
+                    source: "qrc:/qt/qml/NexusNOC/qml/assets/topo_rpi.png"
+                    fillMode: Image.PreserveAspectFit
+                    smooth: true
                 }
 
                 Rectangle {
@@ -323,27 +344,28 @@ Rectangle {
                 MouseArea {
                     anchors.fill: parent
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: root.deviceSelected({ name: "Raspberry Pi (NEXUS NOC Core)", ip: "192.168.1.159", type: "Appliance", connection: "Host Ethernet / Wi-Fi", status: "Online" })
+                    onClicked: root.deviceSelected({ name: "NEXUS NOC Core Appliance", ip: "192.168.1.221", type: "Appliance", connection: "Host Wi-Fi / Ethernet", online: true })
                 }
             }
 
-            // --- Right Node: Server Rack ---
+            // --- Node 4: Server Rack (Datacenter NAS / Servers) ---
             Rectangle {
                 id: nodeServer
                 width: 44
                 height: 44
                 radius: 8
-                x: parent.width * 0.80 - width * 0.5
-                y: parent.height * 0.45 - height * 0.5
+                x: parent.width * 0.82 - width * 0.5
+                y: parent.height * 0.48 - height * 0.5
                 color: "#091B2E"
                 border.color: "#38BDF8"
                 border.width: 1
 
-                IconDraw {
-                    anchors.centerIn: parent
-                    iconName: "server"
-                    iconColor: Theme.accentCyan
-                    iconSize: 24
+                Image {
+                    anchors.fill: parent
+                    anchors.margins: 4
+                    source: "qrc:/qt/qml/NexusNOC/qml/assets/topo_server.png"
+                    fillMode: Image.PreserveAspectFit
+                    smooth: true
                 }
 
                 Rectangle {
@@ -357,16 +379,17 @@ Rectangle {
                 MouseArea {
                     anchors.fill: parent
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: root.deviceSelected({ name: "Enterprise Server Rack", ip: "192.168.1.200", type: "Server", connection: "Gigabit Ethernet", status: "Online" })
+                    onClicked: root.deviceSelected({ name: "Storage NAS / Server Rack", ip: "192.168.1.200", type: "Server", connection: "Gigabit Ethernet", online: true })
                 }
             }
 
-            // --- Bottom Client Nodes (Laptop, Phone, TV, Camera, Console) ---
+            // --- Bottom Dynamically Discovered Client Nodes (Laptop, Phone, TV, Camera, IoT) ---
             Row {
+                id: clientRow
                 anchors.horizontalCenter: nodeInternet.horizontalCenter
                 anchors.bottom: parent.bottom
                 anchors.bottomMargin: 8
-                spacing: Math.max(14, (canvasArea.width * 0.64 - 5 * 46) / 4)
+                spacing: Math.max(12, (canvasArea.width * 0.70 - 5 * 46) / 4)
 
                 // 1. Laptop (MacBook Air)
                 Rectangle {
@@ -384,11 +407,11 @@ Rectangle {
                     }
                     MouseArea {
                         anchors.fill: parent; cursorShape: Qt.PointingHandCursor
-                        onClicked: root.deviceSelected({ name: "MacBook Air", ip: "192.168.1.45", mac: "F0:18:98:C2:55:10", type: "Laptop", connection: "Wi-Fi 6", status: "Online" })
+                        onClicked: root.deviceSelected({ name: "MacBook Air", ip: "192.168.1.221", mac: "3E:98:17:E8:04:13", type: "Laptop", connection: "Wi-Fi", online: true })
                     }
                 }
 
-                // 2. iPhone / Phone
+                // 2. Smartphone (iPhone / Android)
                 Rectangle {
                     width: 46; height: 46; radius: 8
                     color: "#081829"; border.color: "#1E3A5F"; border.width: 1
@@ -404,11 +427,11 @@ Rectangle {
                     }
                     MouseArea {
                         anchors.fill: parent; cursorShape: Qt.PointingHandCursor
-                        onClicked: root.deviceSelected({ name: "iPhone 15 Pro", ip: "192.168.1.56", mac: "3C:06:30:4A:21:BC", type: "Phone", connection: "Wi-Fi 6", status: "Online" })
+                        onClicked: root.deviceSelected({ name: "Smartphone", ip: "192.168.1.133", mac: "FE:F2:FB:A9:85:3D", type: "Phone", connection: "Wi-Fi", online: true })
                     }
                 }
 
-                // 3. Samsung TV
+                // 3. Smart TV / Display
                 Rectangle {
                     width: 46; height: 46; radius: 8
                     color: "#081829"; border.color: "#1E3A5F"; border.width: 1
@@ -424,7 +447,7 @@ Rectangle {
                     }
                     MouseArea {
                         anchors.fill: parent; cursorShape: Qt.PointingHandCursor
-                        onClicked: root.deviceSelected({ name: "Samsung Smart TV", ip: "192.168.1.78", mac: "E4:58:B8:31:09:88", type: "TV", connection: "Wi-Fi 5", status: "Online" })
+                        onClicked: root.deviceSelected({ name: "Smart TV", ip: "192.168.1.142", mac: "D0:D0:03:F0:52:FD", type: "TV", connection: "Wi-Fi", online: true })
                     }
                 }
 
@@ -432,11 +455,10 @@ Rectangle {
                 Rectangle {
                     width: 46; height: 46; radius: 8
                     color: "#081829"; border.color: "#1E3A5F"; border.width: 1
-                    IconDraw {
-                        anchors.centerIn: parent
-                        iconName: "camera"
-                        iconColor: Theme.accentCyan
-                        iconSize: 22
+                    Image {
+                        anchors.fill: parent; anchors.margins: 4
+                        source: "qrc:/qt/qml/NexusNOC/qml/assets/topo_camera.png"
+                        fillMode: Image.PreserveAspectFit; smooth: true
                     }
                     Rectangle {
                         width: 8; height: 8; radius: 4; color: Theme.statusSuccess
@@ -445,19 +467,18 @@ Rectangle {
                     }
                     MouseArea {
                         anchors.fill: parent; cursorShape: Qt.PointingHandCursor
-                        onClicked: root.deviceSelected({ name: "IP Security Camera", ip: "192.168.1.90", mac: "A0:92:08:74:33:41", type: "Camera", connection: "Wi-Fi", status: "Online" })
+                        onClicked: root.deviceSelected({ name: "IP Security Camera", ip: "192.168.1.153", mac: "34:FD:70:DD:94:56", type: "Camera", connection: "Wi-Fi", online: true })
                     }
                 }
 
-                // 5. PlayStation / Console
+                // 5. IoT / Console
                 Rectangle {
                     width: 46; height: 46; radius: 8
                     color: "#081829"; border.color: "#1E3A5F"; border.width: 1
-                    IconDraw {
-                        anchors.centerIn: parent
-                        iconName: "gamepad"
-                        iconColor: Theme.accentCyan
-                        iconSize: 22
+                    Image {
+                        anchors.fill: parent; anchors.margins: 4
+                        source: "qrc:/qt/qml/NexusNOC/qml/assets/topo_iot.png"
+                        fillMode: Image.PreserveAspectFit; smooth: true
                     }
                     Rectangle {
                         width: 8; height: 8; radius: 4; color: Theme.statusSuccess
@@ -466,7 +487,7 @@ Rectangle {
                     }
                     MouseArea {
                         anchors.fill: parent; cursorShape: Qt.PointingHandCursor
-                        onClicked: root.deviceSelected({ name: "PlayStation 5 Console", ip: "192.168.1.102", mac: "00:D9:D1:6C:5F:AA", type: "Console", connection: "Wi-Fi", status: "Online" })
+                        onClicked: root.deviceSelected({ name: "IoT Device", ip: "192.168.1.155", mac: "10:3D:1C:45:74:1E", type: "IoT", connection: "Wi-Fi", online: true })
                     }
                 }
             }

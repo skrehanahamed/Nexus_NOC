@@ -31,6 +31,9 @@ Item {
     // Selected Time Range: 1H | 6H | 24H | 7D | 30D (Default: 1H)
     property string selectedRange: (typeof networkMonitor !== "undefined" && networkMonitor) ? networkMonitor.timeRange : "1H"
 
+    // Inspected Device state for detail modal
+    property var inspectedDevice: null
+
     Layout.fillWidth: true
     Layout.fillHeight: true
 
@@ -116,7 +119,7 @@ Item {
         }
 
         // ====================================================================
-        // 2. First KPI Row: 6 Compact Network Cards (Real Live Data & Inactive States)
+        // 2. First KPI Row: 6 Compact Network Cards
         // ====================================================================
         RowLayout {
             id: kpiRow
@@ -221,10 +224,212 @@ Item {
             }
         }
 
-        // Breathing space / placeholder below KPI row for future sections
-        Item {
+        // ====================================================================
+        // 3. Second Section: Network Topology (Left) + Network Traffic (Right)
+        // ====================================================================
+        RowLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
+            spacing: 12
+
+            // Left Panel: Network Topology Visualization (~58% width)
+            NetworkTopologyCard {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                Layout.preferredWidth: 580
+                onDeviceSelected: function(dev) {
+                    root.inspectedDevice = dev;
+                }
+            }
+
+            // Right Panel: Large Live Network Traffic Graph (~42% width)
+            NetworkTrafficCard {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                Layout.preferredWidth: 420
+            }
+        }
+    }
+
+    // ========================================================================
+    // Interactive Device Detail Inspector Modal Drawer
+    // ========================================================================
+    Rectangle {
+        id: inspectorOverlay
+        visible: root.inspectedDevice !== null
+        anchors.fill: parent
+        color: "#A6030712"
+        z: 99
+
+        MouseArea {
+            anchors.fill: parent
+            onClicked: root.inspectedDevice = null
+        }
+
+        Rectangle {
+            id: inspectorCard
+            width: Math.min(420, parent.width - 40)
+            height: 330
+            radius: 12
+            color: "#0E182A"
+            border.color: "#1E3A5F"
+            border.width: 1.5
+            anchors.centerIn: parent
+
+            MouseArea {
+                anchors.fill: parent
+            }
+
+            ColumnLayout {
+                anchors.fill: parent
+                anchors.margins: 20
+                spacing: 14
+
+                // Header
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 10
+
+                    Rectangle {
+                        width: 38
+                        height: 38
+                        radius: 19
+                        color: "#13233E"
+                        border.color: Theme.accentCyan
+                        border.width: 1
+
+                        IconDraw {
+                            anchors.centerIn: parent
+                            iconName: root.inspectedDevice ? (root.inspectedDevice.icon || "laptop") : "laptop"
+                            iconColor: Theme.accentCyan
+                            iconSize: 20
+                        }
+                    }
+
+                    ColumnLayout {
+                        spacing: 2
+                        Layout.fillWidth: true
+
+                        Text {
+                            text: root.inspectedDevice ? root.inspectedDevice.name : "Device Details"
+                            font.pixelSize: 15
+                            font.bold: true
+                            font.family: Theme.fontSans
+                            color: Theme.textPrimary
+                        }
+
+                        Text {
+                            text: (root.inspectedDevice && root.inspectedDevice.online) ? "Online • Active on Subnet" : "Offline"
+                            font.pixelSize: 11
+                            color: (root.inspectedDevice && root.inspectedDevice.online) ? Theme.statusSuccess : Theme.statusCritical
+                        }
+                    }
+
+                    Text {
+                        text: "✕"
+                        font.pixelSize: 16
+                        color: Theme.textMuted
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.inspectedDevice = null
+                        }
+                    }
+                }
+
+                Rectangle {
+                    Layout.fillWidth: true
+                    height: 1
+                    color: "#1B2A42"
+                }
+
+                // Device Specs Grid
+                GridLayout {
+                    Layout.fillWidth: true
+                    columns: 2
+                    rowSpacing: 10
+                    columnSpacing: 16
+
+                    ColumnLayout {
+                        spacing: 2
+                        Text { text: "IP ADDRESS"; font.pixelSize: 10; font.bold: true; font.family: Theme.fontMono; color: Theme.textMuted }
+                        Text { text: root.inspectedDevice ? (root.inspectedDevice.ip || "—") : "—"; font.pixelSize: 13; font.family: Theme.fontMono; color: Theme.accentCyan }
+                    }
+
+                    ColumnLayout {
+                        spacing: 2
+                        Text { text: "MAC ADDRESS"; font.pixelSize: 10; font.bold: true; font.family: Theme.fontMono; color: Theme.textMuted }
+                        Text { text: root.inspectedDevice ? (root.inspectedDevice.mac || "—") : "—"; font.pixelSize: 12; font.family: Theme.fontMono; color: Theme.textSecondary }
+                    }
+
+                    ColumnLayout {
+                        spacing: 2
+                        Text { text: "CONNECTION"; font.pixelSize: 10; font.bold: true; font.family: Theme.fontMono; color: Theme.textMuted }
+                        Text { text: root.inspectedDevice ? (root.inspectedDevice.connection || "Wi-Fi") : "Wi-Fi"; font.pixelSize: 13; color: Theme.textPrimary }
+                    }
+
+                    ColumnLayout {
+                        spacing: 2
+                        Text { text: "DEVICE CATEGORY"; font.pixelSize: 10; font.bold: true; font.family: Theme.fontMono; color: Theme.textMuted }
+                        Text { text: root.inspectedDevice ? (root.inspectedDevice.type || "Client") : "Client"; font.pixelSize: 13; color: Theme.textPrimary }
+                    }
+                }
+
+                Item { Layout.fillHeight: true }
+
+                // Actions Row: Ping Diagnostic & Close
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 12
+
+                    Rectangle {
+                        Layout.fillWidth: true
+                        height: 36
+                        radius: 6
+                        color: "#13233E"
+                        border.color: Theme.accentCyan
+
+                        RowLayout {
+                            anchors.centerIn: parent
+                            spacing: 6
+                            IconDraw { iconName: "uptime"; iconColor: Theme.accentCyan; iconSize: 14 }
+                            Text { text: "PING DIAGNOSTIC"; font.pixelSize: 11; font.bold: true; color: Theme.accentCyan }
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                if (typeof networkMonitor !== "undefined" && networkMonitor) {
+                                    networkMonitor.samplePing();
+                                }
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        Layout.fillWidth: true
+                        height: 36
+                        radius: 6
+                        color: "#162033"
+                        border.color: "#2A3A55"
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "CLOSE"
+                            font.pixelSize: 11
+                            font.bold: true
+                            color: Theme.textSecondary
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.inspectedDevice = null
+                        }
+                    }
+                }
+            }
         }
     }
 }
