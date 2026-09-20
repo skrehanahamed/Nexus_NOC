@@ -19,14 +19,22 @@ class DeviceManager : public QObject {
     Q_PROPERTY(int connectedDeviceCount READ connectedDeviceCount NOTIFY devicesChanged)
     Q_PROPERTY(int onlineDeviceCount READ onlineDeviceCount NOTIFY devicesChanged)
     Q_PROPERTY(int offlineDeviceCount READ offlineDeviceCount NOTIFY devicesChanged)
+    Q_PROPERTY(int wifiClientCount READ wifiClientCount NOTIFY devicesChanged)
+    Q_PROPERTY(int ethernetClientCount READ ethernetClientCount NOTIFY devicesChanged)
+    Q_PROPERTY(int iotDeviceCount READ iotDeviceCount NOTIFY devicesChanged)
+    Q_PROPERTY(int totalDeviceCount READ totalDeviceCount NOTIFY devicesChanged)
     Q_PROPERTY(QVariantList devices READ devices NOTIFY devicesChanged)
 
 public:
     explicit DeviceManager(QObject *parent = nullptr);
 
     int connectedDeviceCount() const { return m_devices.size(); }
-    int onlineDeviceCount() const { return m_devices.size(); }
-    int offlineDeviceCount() const { return 0; }
+    int onlineDeviceCount() const;
+    int offlineDeviceCount() const;
+    int wifiClientCount() const;
+    int ethernetClientCount() const;
+    int iotDeviceCount() const;
+    int totalDeviceCount() const { return m_devices.size(); }
     QVariantList devices() const { return m_devices; }
 
     Q_INVOKABLE void refreshDevices();

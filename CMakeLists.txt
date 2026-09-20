@@ -96,6 +96,12 @@ qt_add_qml_module(NexusNOC
         qml/components/CircularGauge.qml
         qml/components/LatencyGraph.qml
         qml/components/TopologyView.qml
+        qml/components/NetworkKpiCard.qml
+        qml/components/NetworkTopologyCard.qml
+        qml/components/NetworkTrafficCard.qml
+        qml/components/NetworkInterfacesCard.qml
+        qml/components/ConnectedDevicesCard.qml
+        qml/components/NetworkStatsCard.qml
         qml/components/IconDraw.qml
         qml/pages/OverviewPage.qml
         qml/pages/NetworkPage.qml

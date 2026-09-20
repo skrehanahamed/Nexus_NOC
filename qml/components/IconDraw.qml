@@ -443,11 +443,78 @@ Canvas {
             break;
 
         case "system":
-            ctx.lineWidth = 1.5;
             rRect(s * 0.1, s * 0.14, s * 0.8, s * 0.72, 4); ctx.stroke();
             ctx.lineWidth = 1.8;
             ctx.beginPath(); ctx.moveTo(s * 0.24, s * 0.42); ctx.lineTo(s * 0.38, s * 0.52); ctx.lineTo(s * 0.24, s * 0.62); ctx.stroke();
             ctx.beginPath(); ctx.moveTo(s * 0.44, s * 0.62); ctx.lineTo(s * 0.62, s * 0.62); ctx.stroke();
+            break;
+
+        case "camera":
+            ctx.lineWidth = 1.5;
+            rRect(s * 0.14, s * 0.28, s * 0.72, s * 0.52, 4); ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(s * 0.35, s * 0.28);
+            ctx.lineTo(s * 0.42, s * 0.16);
+            ctx.lineTo(s * 0.58, s * 0.16);
+            ctx.lineTo(s * 0.65, s * 0.28);
+            ctx.closePath();
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(s * 0.5, s * 0.54, s * 0.16, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(s * 0.5, s * 0.54, 2, 0, Math.PI * 2);
+            ctx.fill();
+            break;
+
+        case "gamepad":
+        case "console":
+            ctx.lineWidth = 1.5;
+            rRect(s * 0.1, s * 0.25, s * 0.8, s * 0.5, 6); ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(s * 0.28, s * 0.42); ctx.lineTo(s * 0.28, s * 0.58);
+            ctx.moveTo(s * 0.20, s * 0.50); ctx.lineTo(s * 0.36, s * 0.50);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(s * 0.72, s * 0.44, 1.8, 0, Math.PI * 2);
+            ctx.arc(s * 0.64, s * 0.52, 1.8, 0, Math.PI * 2);
+            ctx.arc(s * 0.80, s * 0.52, 1.8, 0, Math.PI * 2);
+            ctx.arc(s * 0.72, s * 0.60, 1.8, 0, Math.PI * 2);
+            ctx.fill();
+            break;
+
+        case "chip":
+            ctx.lineWidth = 1.4;
+            rRect(s * 0.24, s * 0.24, s * 0.52, s * 0.52, 3); ctx.stroke();
+            for (var cpi = 0; cpi < 3; cpi++) {
+                var coff = s * 0.32 + cpi * s * 0.18;
+                ctx.beginPath(); ctx.moveTo(coff, s * 0.24); ctx.lineTo(coff, s * 0.12); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(coff, s * 0.76); ctx.lineTo(coff, s * 0.88); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(s * 0.24, coff); ctx.lineTo(s * 0.12, coff); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(s * 0.76, coff); ctx.lineTo(s * 0.88, coff); ctx.stroke();
+            }
+            break;
+
+        case "arrow-down":
+            ctx.lineWidth = 2.0;
+            ctx.beginPath();
+            ctx.moveTo(s * 0.5, s * 0.18);
+            ctx.lineTo(s * 0.5, s * 0.82);
+            ctx.lineTo(s * 0.32, s * 0.62);
+            ctx.moveTo(s * 0.5, s * 0.82);
+            ctx.lineTo(s * 0.68, s * 0.62);
+            ctx.stroke();
+            break;
+
+        case "arrow-up":
+            ctx.lineWidth = 2.0;
+            ctx.beginPath();
+            ctx.moveTo(s * 0.5, s * 0.82);
+            ctx.lineTo(s * 0.5, s * 0.18);
+            ctx.lineTo(s * 0.32, s * 0.38);
+            ctx.moveTo(s * 0.5, s * 0.18);
+            ctx.lineTo(s * 0.68, s * 0.38);
+            ctx.stroke();
             break;
 
         default:

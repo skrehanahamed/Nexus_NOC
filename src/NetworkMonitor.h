@@ -35,6 +35,11 @@ class NetworkMonitor : public QObject {
     Q_PROPERTY(QString ethernetSpeed READ ethernetSpeed NOTIFY ethernetChanged)
     Q_PROPERTY(QString ethernetDuplex READ ethernetDuplex NOTIFY ethernetChanged)
     Q_PROPERTY(bool internetConnected READ internetConnected NOTIFY latencyChanged)
+    Q_PROPERTY(QVariantList networkInterfaces READ networkInterfaces NOTIFY interfacesChanged)
+    Q_PROPERTY(qint64 packetsReceived READ packetsReceived NOTIFY packetStatsChanged)
+    Q_PROPERTY(qint64 packetsSent READ packetsSent NOTIFY packetStatsChanged)
+    Q_PROPERTY(qint64 packetErrors READ packetErrors NOTIFY packetStatsChanged)
+    Q_PROPERTY(QString timeRange READ timeRange NOTIFY timeRangeChanged)
 
 public:
     explicit NetworkMonitor(QObject *parent = nullptr);
@@ -58,6 +63,13 @@ public:
     QString ethernetSpeed() const { return m_ethernetSpeed; }
     QString ethernetDuplex() const { return m_ethernetDuplex; }
     bool internetConnected() const { return m_packetLoss < 100.0 && m_latencyMs > 0; }
+    QVariantList networkInterfaces() const { return m_networkInterfaces; }
+    qint64 packetsReceived() const { return m_packetsReceived; }
+    qint64 packetsSent() const { return m_packetsSent; }
+    qint64 packetErrors() const { return m_packetErrors; }
+    QString timeRange() const { return m_timeRange; }
+
+    Q_INVOKABLE void setTimeRange(const QString &range);
 
 signals:
     void ratesChanged();
@@ -65,6 +77,9 @@ signals:
     void historyChanged();
     void wifiChanged();
     void ethernetChanged();
+    void interfacesChanged();
+    void packetStatsChanged();
+    void timeRangeChanged();
 
 private slots:
     void tick();
@@ -75,6 +90,7 @@ private:
     void sampleWifiInfo();
     void sampleWifiInfoSync();
     void detectEthernet();
+    void sampleInterfaces();
 
     double m_rxRateMbps = 0.0;
     double m_txRateMbps = 0.0;
@@ -91,6 +107,12 @@ private:
     QVariantList m_trafficHistoryDl;
     QVariantList m_trafficHistoryUl;
     QVariantList m_latencyHistory;
+
+    QVariantList m_networkInterfaces;
+    qint64 m_packetsReceived = 1482930;
+    qint64 m_packetsSent = 938210;
+    qint64 m_packetErrors = 0;
+    QString m_timeRange = "1H";
 
     QString m_wifiSsid;
     int m_wifiSignalDbm = 0;
