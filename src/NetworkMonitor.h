@@ -39,6 +39,9 @@ class NetworkMonitor : public QObject {
     Q_PROPERTY(qint64 packetsReceived READ packetsReceived NOTIFY packetStatsChanged)
     Q_PROPERTY(qint64 packetsSent READ packetsSent NOTIFY packetStatsChanged)
     Q_PROPERTY(qint64 packetErrors READ packetErrors NOTIFY packetStatsChanged)
+    Q_PROPERTY(double downloadMbps READ downloadMbps NOTIFY ratesChanged)
+    Q_PROPERTY(double uploadMbps READ uploadMbps NOTIFY ratesChanged)
+    Q_PROPERTY(double averageLatency READ averageLatency NOTIFY latencyChanged)
     Q_PROPERTY(QString timeRange READ timeRange NOTIFY timeRangeChanged)
 
 public:
@@ -67,6 +70,9 @@ public:
     qint64 packetsReceived() const { return m_packetsReceived; }
     qint64 packetsSent() const { return m_packetsSent; }
     qint64 packetErrors() const { return m_packetErrors; }
+    double downloadMbps() const { return m_rxRateMbps; }
+    double uploadMbps() const { return m_txRateMbps; }
+    double averageLatency() const { return m_latencyMs; }
     QString timeRange() const { return m_timeRange; }
 
     Q_INVOKABLE void setTimeRange(const QString &range);

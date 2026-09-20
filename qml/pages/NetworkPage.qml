@@ -8,32 +8,37 @@
  */
 
 import QtQuick
-import QtQuick.Layouts
 import QtQuick.Controls
+import QtQuick.Layouts
 import NexusNOC
 import "../components"
 
-Flickable {
+Item {
     id: root
 
-    contentWidth: width
-    contentHeight: mainCol.implicitHeight + 40
-    clip: true
-    boundsBehavior: Flickable.StopAtBounds
+    // ========================================================================
+    // Dynamic KPI Properties connected to C++ Backend (NetworkMonitor & DeviceManager)
+    // ========================================================================
+    property int wifiClientCount: (typeof deviceManager !== "undefined" && deviceManager) ? deviceManager.wifiClientCount : 5
+    property int ethernetClientCount: (typeof deviceManager !== "undefined" && deviceManager) ? deviceManager.ethernetClientCount : 2
+    property int totalDeviceCount: (typeof deviceManager !== "undefined" && deviceManager) ? deviceManager.totalDeviceCount : 12
+    property real downloadMbps: (typeof networkMonitor !== "undefined" && networkMonitor) ? networkMonitor.downloadMbps : 86.4
+    property real uploadMbps: (typeof networkMonitor !== "undefined" && networkMonitor) ? networkMonitor.uploadMbps : 32.1
+    property real averageLatency: (typeof networkMonitor !== "undefined" && networkMonitor) ? networkMonitor.averageLatency : 30.4
 
-    property string selectedTimeRange: (typeof networkMonitor !== "undefined" && networkMonitor) ? networkMonitor.timeRange : "1H"
-    property var inspectedDevice: null
+    // Selected Time Range: 1H | 6H | 24H | 7D | 30D (Default: 1H)
+    property string selectedRange: (typeof networkMonitor !== "undefined" && networkMonitor) ? networkMonitor.timeRange : "1H"
+
+    Layout.fillWidth: true
+    Layout.fillHeight: true
 
     ColumnLayout {
-        id: mainCol
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.top: parent.top
+        anchors.fill: parent
         anchors.margins: 20
         spacing: 16
 
         // ====================================================================
-        // 1. Network Page Header
+        // 1. Network Page Header with Time-Range Selector
         // ====================================================================
         RowLayout {
             Layout.fillWidth: true
@@ -70,34 +75,33 @@ Flickable {
                 border.color: "#1B2A42"
                 border.width: 1
 
-                Row {
+                RowLayout {
                     id: rangeRow
                     anchors.centerIn: parent
                     spacing: 2
 
                     Repeater {
                         model: ["1H", "6H", "24H", "7D", "30D"]
-
-                        Rectangle {
-                            width: 44
+                        delegate: Rectangle {
+                            width: 38
                             height: 26
                             radius: 4
-                            color: root.selectedTimeRange === modelData ? "#0284C7" : "transparent"
+                            color: root.selectedRange === modelData ? Theme.accentPrimary : "transparent"
 
                             Text {
                                 anchors.centerIn: parent
                                 text: modelData
                                 font.pixelSize: 11
-                                font.bold: root.selectedTimeRange === modelData
+                                font.bold: root.selectedRange === modelData
                                 font.family: Theme.fontMono
-                                color: root.selectedTimeRange === modelData ? "#FFFFFF" : Theme.textSecondary
+                                color: root.selectedRange === modelData ? "#FFFFFF" : Theme.textSecondary
                             }
 
                             MouseArea {
                                 anchors.fill: parent
                                 cursorShape: Qt.PointingHandCursor
                                 onClicked: {
-                                    root.selectedTimeRange = modelData;
+                                    root.selectedRange = modelData;
                                     if (typeof networkMonitor !== "undefined" && networkMonitor) {
                                         networkMonitor.setTimeRange(modelData);
                                     }
@@ -110,75 +114,96 @@ Flickable {
         }
 
         // ====================================================================
-        // 2. Network KPI Row (6 Cards)
+        // 2. First KPI Row: 6 Compact Network Cards
         // ====================================================================
         RowLayout {
+            id: kpiRow
             Layout.fillWidth: true
-            spacing: 10
+            Layout.preferredHeight: 96
+            spacing: 12
 
             // 1. Wi-Fi Clients
             NetworkKpiCard {
                 title: "Wi-Fi Clients"
-                value: (typeof deviceManager !== "undefined" && deviceManager) ? deviceManager.wifiClientCount.toString() : "5"
+                value: root.wifiClientCount.toString()
+                unit: "Clients"
                 trendText: "↑ 2"
                 isTrendPositive: true
+                iconSource: "qrc:/qt/qml/NexusNOC/qml/assets/kpi/kpi_wifi.png"
                 iconName: "wifi"
-                iconColor: "#38BDF8"
-                sparkColor: "#38BDF8"
-                sparkPoints: [0.3, 0.4, 0.35, 0.6, 0.5, 0.8, 0.75, 0.95]
+                iconColor: "#00E676"
+                sparkColor: "#00E676"
+                sparkPoints: [0.3, 0.4, 0.35, 0.6, 0.5, 0.75, 0.65, 0.85]
             }
 
             // 2. Ethernet Clients
             NetworkKpiCard {
                 title: "Ethernet Clients"
-                value: (typeof deviceManager !== "undefined" && deviceManager) ? deviceManager.ethernetClientCount.toString() : "2"
+                value: root.ethernetClientCount.toString()
+                unit: "Clients"
                 trendText: "↑ 1"
                 isTrendPositive: true
+                iconSource: "qrc:/qt/qml/NexusNOC/qml/assets/kpi/kpi_ethernet.png"
                 iconName: "ethernet"
-                iconColor: "#00E676"
-                sparkColor: "#00E676"
-                sparkPoints: [0.2, 0.3, 0.5, 0.4, 0.7, 0.65, 0.85, 0.9]
+                iconColor: "#38BDF8"
+                sparkColor: "#38BDF8"
+                sparkPoints: [0.4, 0.35, 0.5, 0.45, 0.6, 0.55, 0.7, 0.8]
             }
 
             // 3. Total Devices
             NetworkKpiCard {
                 title: "Total Devices"
-                value: (typeof deviceManager !== "undefined" && deviceManager) ? deviceManager.totalDeviceCount.toString() : "12"
+                value: root.totalDeviceCount.toString()
+                unit: "Devices"
                 trendText: "↑ 3"
                 isTrendPositive: true
+                iconSource: "qrc:/qt/qml/NexusNOC/qml/assets/kpi/kpi_devices.png"
                 iconName: "devices"
                 iconColor: "#38BDF8"
                 sparkColor: "#38BDF8"
-                sparkPoints: [0.4, 0.35, 0.55, 0.5, 0.7, 0.8, 0.75, 0.95]
+                sparkPoints: [0.3, 0.45, 0.4, 0.65, 0.55, 0.8, 0.7, 0.9]
             }
 
             // 4. Download
             NetworkKpiCard {
                 title: "Download"
-                value: (typeof networkMonitor !== "undefined" && networkMonitor) ? networkMonitor.rxRateMbps.toFixed(1) : "86.4"
+                value: root.downloadMbps.toFixed(1)
                 unit: "Mbps"
+                trendText: ""
+                isTrendPositive: true
+                iconSource: "qrc:/qt/qml/NexusNOC/qml/assets/kpi/kpi_download.png"
                 iconName: "arrow-down"
                 iconColor: "#00E676"
                 sparkColor: "#00E676"
-                sparkPoints: [0.5, 0.7, 0.6, 0.85, 0.7, 0.9, 0.8, 0.95]
+                sparkPoints: (typeof networkMonitor !== "undefined" && networkMonitor && networkMonitor.trafficHistoryDl && networkMonitor.trafficHistoryDl.length > 0) ?
+                    networkMonitor.trafficHistoryDl.slice(-10).map(v => Math.min(1.0, Math.max(0.1, v / 120.0))) :
+                    [0.2, 0.5, 0.4, 0.8, 0.6, 0.7, 0.85, 0.75]
             }
 
             // 5. Upload
             NetworkKpiCard {
                 title: "Upload"
-                value: (typeof networkMonitor !== "undefined" && networkMonitor) ? networkMonitor.txRateMbps.toFixed(1) : "32.1"
+                value: root.uploadMbps.toFixed(1)
                 unit: "Mbps"
+                trendText: ""
+                isTrendPositive: true
+                iconSource: "qrc:/qt/qml/NexusNOC/qml/assets/kpi/kpi_upload.png"
                 iconName: "arrow-up"
                 iconColor: "#38BDF8"
                 sparkColor: "#38BDF8"
-                sparkPoints: [0.3, 0.5, 0.45, 0.7, 0.6, 0.8, 0.75, 0.85]
+                sparkPoints: (typeof networkMonitor !== "undefined" && networkMonitor && networkMonitor.trafficHistoryUl && networkMonitor.trafficHistoryUl.length > 0) ?
+                    networkMonitor.trafficHistoryUl.slice(-10).map(v => Math.min(1.0, Math.max(0.1, v / 60.0))) :
+                    [0.2, 0.35, 0.3, 0.6, 0.45, 0.55, 0.5, 0.65]
             }
 
             // 6. Average Latency
             NetworkKpiCard {
-                title: "Avg. Latency"
-                value: (typeof networkMonitor !== "undefined" && networkMonitor) ? networkMonitor.latencyMs.toFixed(1) : "30.4"
+                title: "Average Latency"
+                value: root.averageLatency.toFixed(1)
                 unit: "ms"
+                trendText: ""
+                isTrendPositive: true
+                iconSource: "qrc:/qt/qml/NexusNOC/qml/assets/kpi/kpi_latency.png"
                 iconName: "globe"
                 iconColor: "#38BDF8"
                 sparkColor: "#38BDF8"
@@ -186,281 +211,10 @@ Flickable {
             }
         }
 
-        // ====================================================================
-        // 3. Middle Row: Network Topology (Left) + Traffic & Interfaces (Right)
-        // ====================================================================
-        RowLayout {
+        // Breathing space / placeholder below KPI row for future sections
+        Item {
             Layout.fillWidth: true
-            Layout.preferredHeight: 340
-            spacing: 12
-
-            // Left: Network Topology Panel (~58% width)
-            NetworkTopologyCard {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                Layout.preferredWidth: 580
-                onDeviceSelected: function(dev) {
-                    root.inspectedDevice = dev;
-                }
-            }
-
-            // Right: Traffic & Interfaces Column (~42% width)
-            ColumnLayout {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                Layout.preferredWidth: 420
-                spacing: 12
-
-                // Top: Network Traffic Graph
-                NetworkTrafficCard {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    Layout.preferredHeight: 164
-                }
-
-                // Bottom: Network Interfaces Table
-                NetworkInterfacesCard {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    Layout.preferredHeight: 164
-                }
-            }
-        }
-
-        // ====================================================================
-        // 4. Bottom Row: Connected Devices (Left) + Network Statistics (Right)
-        // ====================================================================
-        RowLayout {
-            Layout.fillWidth: true
-            Layout.preferredHeight: 250
-            spacing: 12
-
-            // Left: Connected Devices Table (~58% width)
-            ConnectedDevicesCard {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                Layout.preferredWidth: 580
-                onDeviceClicked: function(dev) {
-                    root.inspectedDevice = dev;
-                }
-                onViewAllClicked: {
-                    // Navigate to Devices page if root window has page switching
-                    if (typeof root.parent !== "undefined" && root.parent.currentIndex !== undefined) {
-                        root.parent.currentIndex = 2; // Devices index
-                    }
-                }
-            }
-
-            // Right: Network Statistics 2x2 Grid (~42% width)
-            NetworkStatsCard {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                Layout.preferredWidth: 420
-                onViewAllClicked: {
-                    if (typeof root.parent !== "undefined" && root.parent.currentIndex !== undefined) {
-                        root.parent.currentIndex = 2;
-                    }
-                }
-            }
-        }
-    }
-
-    // ========================================================================
-    // 5. Interactive Device Detail Inspector Overlay
-    // ========================================================================
-    Rectangle {
-        id: inspectorOverlay
-        visible: root.inspectedDevice !== null
-        anchors.fill: parent
-        color: "#A6030712"
-        z: 99
-
-        MouseArea {
-            anchors.fill: parent
-            onClicked: root.inspectedDevice = null
-        }
-
-        Rectangle {
-            id: inspectorCard
-            width: Math.min(420, parent.width - 40)
-            height: 330
-            radius: 12
-            color: "#0E182A"
-            border.color: "#1E3A5F"
-            border.width: 1.5
-            anchors.centerIn: parent
-
-            MouseArea {
-                anchors.fill: parent // Prevent clicks closing through card
-            }
-
-            ColumnLayout {
-                anchors.fill: parent
-                anchors.margins: 20
-                spacing: 14
-
-                // Modal Header
-                RowLayout {
-                    Layout.fillWidth: true
-
-                    Rectangle {
-                        width: 38; height: 38; radius: 19
-                        color: Qt.rgba(0, 229, 255, 0.15)
-                        border.color: Theme.accentCyan
-                        IconDraw {
-                            anchors.centerIn: parent
-                            iconName: (root.inspectedDevice && root.inspectedDevice.icon) ? root.inspectedDevice.icon : "devices"
-                            iconColor: Theme.accentCyan
-                            iconSize: 18
-                        }
-                    }
-
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        spacing: 2
-
-                        Text {
-                            text: root.inspectedDevice ? root.inspectedDevice.name : "Device Details"
-                            font.pixelSize: 15
-                            font.bold: true
-                            font.family: Theme.fontSans
-                            color: Theme.textPrimary
-                        }
-
-                        RowLayout {
-                            spacing: 6
-                            Rectangle {
-                                width: 7; height: 7; radius: 3.5
-                                color: (root.inspectedDevice && root.inspectedDevice.online === false) ? "#64748B" : "#00E676"
-                            }
-                            Text {
-                                text: (root.inspectedDevice && root.inspectedDevice.online === false) ? "Offline" : "Online & Active"
-                                font.pixelSize: 11
-                                font.bold: true
-                                color: (root.inspectedDevice && root.inspectedDevice.online === false) ? "#64748B" : "#00E676"
-                            }
-                        }
-                    }
-
-                    // Close Button
-                    Rectangle {
-                        width: 28; height: 28; radius: 14
-                        color: "#16233B"
-                        Text {
-                            anchors.centerIn: parent
-                            text: "✕"
-                            font.pixelSize: 12
-                            font.bold: true
-                            color: Theme.textSecondary
-                        }
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: root.inspectedDevice = null
-                        }
-                    }
-                }
-
-                Rectangle {
-                    Layout.fillWidth: true
-                    height: 1
-                    color: "#1B2A42"
-                }
-
-                // Device Specs Grid
-                GridLayout {
-                    Layout.fillWidth: true
-                    columns: 2
-                    rowSpacing: 10
-                    columnSpacing: 16
-
-                    ColumnLayout {
-                        spacing: 2
-                        Text { text: "IP ADDRESS"; font.pixelSize: 10; font.bold: true; font.family: Theme.fontMono; color: Theme.textMuted }
-                        Text { text: root.inspectedDevice ? (root.inspectedDevice.ip || "192.168.1.45") : "—"; font.pixelSize: 13; font.family: Theme.fontMono; color: Theme.accentCyan }
-                    }
-
-                    ColumnLayout {
-                        spacing: 2
-                        Text { text: "MAC ADDRESS"; font.pixelSize: 10; font.bold: true; font.family: Theme.fontMono; color: Theme.textMuted }
-                        Text { text: root.inspectedDevice ? (root.inspectedDevice.mac || "F0:18:98:C2:55:10") : "—"; font.pixelSize: 12; font.family: Theme.fontMono; color: Theme.textSecondary }
-                    }
-
-                    ColumnLayout {
-                        spacing: 2
-                        Text { text: "CONNECTION"; font.pixelSize: 10; font.bold: true; font.family: Theme.fontMono; color: Theme.textMuted }
-                        Text { text: root.inspectedDevice ? (root.inspectedDevice.connection || "Wi-Fi 6") : "Wi-Fi"; font.pixelSize: 13; color: Theme.textPrimary }
-                    }
-
-                    ColumnLayout {
-                        spacing: 2
-                        Text { text: "DEVICE CATEGORY"; font.pixelSize: 10; font.bold: true; font.family: Theme.fontMono; color: Theme.textMuted }
-                        Text { text: root.inspectedDevice ? (root.inspectedDevice.type || "Client") : "Client"; font.pixelSize: 13; color: Theme.textPrimary }
-                    }
-                }
-
-                Item { Layout.fillHeight: true }
-
-                // Actions Row
-                RowLayout {
-                    Layout.fillWidth: true
-                    spacing: 12
-
-                    Rectangle {
-                        Layout.fillWidth: true
-                        height: 36
-                        radius: 6
-                        color: "#13233E"
-                        border.color: Theme.accentCyan
-
-                        RowLayout {
-                            anchors.centerIn: parent
-                            spacing: 6
-                            IconDraw { iconName: "uptime"; iconColor: Theme.accentCyan; iconSize: 14 }
-                            Text { text: "PING DIAGNOSTIC"; font.pixelSize: 11; font.bold: true; color: Theme.accentCyan }
-                        }
-
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: {
-                                // Trigger live ping
-                                if (typeof networkMonitor !== "undefined" && networkMonitor) {
-                                    networkMonitor.samplePing();
-                                }
-                            }
-                        }
-                    }
-
-                    Rectangle {
-                        Layout.fillWidth: true
-                        height: 36
-                        radius: 6
-                        color: "#2E1520"
-                        border.color: Theme.statusCritical
-
-                        RowLayout {
-                            anchors.centerIn: parent
-                            spacing: 6
-                            IconDraw { iconName: "power"; iconColor: Theme.statusCritical; iconSize: 14 }
-                            Text { text: "RESTRICT ACCESS"; font.pixelSize: 11; font.bold: true; color: Theme.statusCritical }
-                        }
-
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: {
-                                if (root.inspectedDevice && root.inspectedDevice.mac) {
-                                    if (typeof deviceManager !== "undefined" && deviceManager) {
-                                        deviceManager.blockDevice(root.inspectedDevice.mac);
-                                    }
-                                }
-                                root.inspectedDevice = null;
-                            }
-                        }
-                    }
-                }
-            }
+            Layout.fillHeight: true
         }
     }
 }

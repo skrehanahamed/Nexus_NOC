@@ -42,6 +42,12 @@ qt_add_qml_module(NexusNOC
     RESOURCES
         qml/assets/logo.png
         qml/assets/image.png
+        qml/assets/kpi/kpi_wifi.png
+        qml/assets/kpi/kpi_ethernet.png
+        qml/assets/kpi/kpi_devices.png
+        qml/assets/kpi/kpi_download.png
+        qml/assets/kpi/kpi_upload.png
+        qml/assets/kpi/kpi_latency.png
         qml/assets/icon_nexus_logo.png
         qml/assets/icon_clock.png
         qml/assets/icon_uptime.png
