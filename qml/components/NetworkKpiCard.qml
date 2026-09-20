@@ -19,6 +19,7 @@ Rectangle {
     property string unit: ""
     property string trendText: ""
     property bool isTrendPositive: true
+    property bool isInactive: false
     property string iconSource: ""
     property string iconName: "wifi"
     property color iconColor: Theme.accentCyan
@@ -32,17 +33,19 @@ Rectangle {
     Layout.minimumWidth: 150
 
     radius: 10
-    color: mouseArea.containsMouse ? "#0F172A" : "#0C1322"
-    border.color: mouseArea.containsMouse ? Theme.accentPrimary : "#1E293B"
+    color: root.isInactive ? "#080C14" : (mouseArea.containsMouse ? "#0F172A" : "#0C1322")
+    border.color: root.isInactive ? "#151D2A" : (mouseArea.containsMouse ? Theme.accentPrimary : "#1E293B")
     border.width: 1
+    opacity: root.isInactive ? 0.55 : 1.0
 
     Behavior on color { ColorAnimation { duration: 180 } }
     Behavior on border.color { ColorAnimation { duration: 180 } }
+    Behavior on opacity { NumberAnimation { duration: 200 } }
 
     MouseArea {
         id: mouseArea
         anchors.fill: parent
-        hoverEnabled: true
+        hoverEnabled: !root.isInactive
     }
 
     ColumnLayout {
@@ -60,6 +63,7 @@ Rectangle {
                 width: 26
                 height: 26
                 Layout.alignment: Qt.AlignVCenter
+                opacity: root.isInactive ? 0.35 : 1.0
 
                 Image {
                     id: imgIcon
@@ -76,7 +80,7 @@ Rectangle {
                     visible: root.iconSource === ""
                     anchors.centerIn: parent
                     iconName: root.iconName
-                    iconColor: root.iconColor
+                    iconColor: root.isInactive ? "#475569" : root.iconColor
                     iconSize: 18
                 }
             }
@@ -86,7 +90,7 @@ Rectangle {
                 font.pixelSize: 12
                 font.bold: false
                 font.family: Theme.fontSans
-                color: "#94A3B8"
+                color: root.isInactive ? "#475569" : "#94A3B8"
                 elide: Text.ElideRight
                 Layout.fillWidth: true
                 Layout.alignment: Qt.AlignVCenter
@@ -104,13 +108,13 @@ Rectangle {
                 Layout.alignment: Qt.AlignVCenter
                 spacing: 1
 
-                // Primary Value (White, bold, high contrast)
+                // Primary Value (White, bold, high contrast, or dimmed gray if inactive)
                 Text {
                     text: root.value
                     font.pixelSize: 21
                     font.bold: true
                     font.family: Theme.fontMono
-                    color: "#FFFFFF"
+                    color: root.isInactive ? "#64748B" : "#FFFFFF"
                 }
 
                 // Subtitle/Unit + Trend indicator
@@ -122,7 +126,7 @@ Rectangle {
                         text: root.unit
                         font.pixelSize: 11
                         font.family: Theme.fontSans
-                        color: "#64748B"
+                        color: root.isInactive ? "#334155" : "#64748B"
                     }
 
                     Text {
@@ -131,12 +135,12 @@ Rectangle {
                         font.pixelSize: 11
                         font.bold: true
                         font.family: Theme.fontMono
-                        color: root.isTrendPositive ? "#10B981" : "#EF4444"
+                        color: root.isInactive ? "#64748B" : (root.isTrendPositive ? "#10B981" : "#EF4444")
                     }
                 }
             }
 
-            // Right: Smooth Sparkline Curve
+            // Right: Smooth Sparkline Curve (or flat faint line if inactive)
             Canvas {
                 id: sparkCanvas
                 Layout.preferredWidth: 60
@@ -148,6 +152,17 @@ Rectangle {
                     var w = width;
                     var h = height;
                     ctx.clearRect(0, 0, w, h);
+
+                    if (root.isInactive) {
+                        ctx.beginPath();
+                        ctx.strokeStyle = "#1E293B";
+                        ctx.lineWidth = 1.5;
+                        ctx.moveTo(0, h * 0.7);
+                        ctx.lineTo(w, h * 0.7);
+                        ctx.stroke();
+                        return;
+                    }
+
                     if (!root.sparkPoints || root.sparkPoints.length < 2) return;
 
                     var pts = root.sparkPoints;
@@ -181,6 +196,7 @@ Rectangle {
                     target: root
                     function onSparkPointsChanged() { sparkCanvas.requestPaint(); }
                     function onSparkColorChanged() { sparkCanvas.requestPaint(); }
+                    function onIsInactiveChanged() { sparkCanvas.requestPaint(); }
                 }
 
                 Component.onCompleted: requestPaint()

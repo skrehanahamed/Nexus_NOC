@@ -35,20 +35,17 @@ NetworkMonitor::NetworkMonitor(QObject *parent)
     , m_pingProcess(new QProcess(this))
     , m_wifiProcess(new QProcess(this))
 {
-    // Initialize realistic waveform history matching reference visual
     for (int i = 0; i < 30; ++i) {
-        double dl = 50.0 + 35.0 * std::sin(i * 0.32) + ((i % 6) * 5.0);
-        double ul = 20.0 + 14.0 * std::cos(i * 0.38) + ((i % 4) * 3.0);
-        m_trafficHistoryDl.append(qRound(dl * 10.0) / 10.0);
-        m_trafficHistoryUl.append(qRound(ul * 10.0) / 10.0);
-        m_latencyHistory.append(28.0 + (i % 5) * 1.5);
+        m_trafficHistoryDl.append(0.0);
+        m_trafficHistoryUl.append(0.0);
+        m_latencyHistory.append(0.0);
     }
 
-    m_rxRateMbps = 86.4;
-    m_txRateMbps = 32.1;
-    m_latencyMs = 30.4;
+    m_rxRateMbps = 0.0;
+    m_txRateMbps = 0.0;
+    m_latencyMs = 0.0;
     m_packetLoss = 0.0;
-    m_jitterMs = 1.8;
+    m_jitterMs = 0.0;
 
     // Immediately detect real network configuration
     sampleWifiInfoSync();

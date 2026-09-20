@@ -13,45 +13,63 @@
 #include <QVariantMap>
 #include <QDebug>
 
+#ifdef Q_OS_UNIX
+#include <ifaddrs.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#endif
+
 DeviceManager::DeviceManager(QObject *parent)
     : QObject(parent)
     , m_scanTimer(new QTimer(this))
 {
-    // Seed baseline devices matching the enterprise reference design
-    auto addSeed = [this](const QString &name, const QString &ip, const QString &mac,
-                          const QString &type, const QString &icon, const QString &conn,
-                          const QString &lastSeen, bool online) {
-        QVariantMap dev;
-        dev["name"] = name;
-        dev["ip"] = ip;
-        dev["mac"] = mac;
-        dev["type"] = type;
-        dev["icon"] = icon;
-        dev["connection"] = conn;
-        dev["lastSeen"] = lastSeen;
-        dev["online"] = online;
-        dev["blocked"] = false;
-        m_knownDevices[mac] = dev;
-        m_devices.append(dev);
-    };
-
-    addSeed("MacBook Air", "192.168.1.45", "F0:18:98:C2:55:10", "Laptop", "laptop", "Wi-Fi", "Now", true);
-    addSeed("iPhone", "192.168.1.56", "3C:06:30:4A:21:BC", "Phone", "phone", "Wi-Fi", "1 min ago", true);
-    addSeed("Samsung TV", "192.168.1.78", "E4:58:B8:31:09:88", "TV", "tv", "Wi-Fi", "2 min ago", true);
-    addSeed("IP Camera", "192.168.1.90", "A0:92:08:74:33:41", "Camera", "camera", "Wi-Fi", "3 min ago", true);
-    addSeed("PlayStation", "192.168.1.102", "00:D9:D1:6C:5F:AA", "Console", "gamepad", "Wi-Fi", "5 min ago", true);
-    addSeed("ESP32", "192.168.1.150", "24:6F:28:B4:91:EE", "IoT", "chip", "Wi-Fi", "Offline", false);
-    addSeed("Core Switch", "192.168.1.2", "40:B0:76:88:12:01", "Server", "network", "Ethernet", "Now", true);
-    addSeed("Storage NAS", "192.168.1.200", "00:11:32:9C:FE:19", "Server", "server", "Ethernet", "Now", true);
-    addSeed("Raspberry Pi Zero", "192.168.1.155", "B8:27:EB:44:88:22", "IoT", "chip", "Wi-Fi", "12 min ago", true);
-    addSeed("Smart Plug", "192.168.1.160", "50:02:91:83:99:A1", "IoT", "iot", "Wi-Fi", "45 min ago", true);
-    addSeed("Office Printer", "192.168.1.88", "68:B5:99:04:12:33", "Server", "devices", "Ethernet", "Offline", false);
-    addSeed("iPad Pro", "192.168.1.60", "70:3E:AC:84:99:50", "Phone", "phone", "Wi-Fi", "Offline", false);
+    // Add local NOC host machine entry
+#ifdef Q_OS_UNIX
+    struct ifaddrs *ifap = nullptr;
+    if (getifaddrs(&ifap) == 0) {
+        for (struct ifaddrs *ifa = ifap; ifa != nullptr; ifa = ifa->ifa_next) {
+            if (!ifa->ifa_addr || ifa->ifa_addr->sa_family != AF_INET) continue;
+            QString name(ifa->ifa_name);
+            if (name == "lo0" || name == "lo") continue;
+            struct sockaddr_in *sa = reinterpret_cast<struct sockaddr_in *>(ifa->ifa_addr);
+            char addrStr[INET_ADDRSTRLEN];
+            if (inet_ntop(AF_INET, &(sa->sin_addr), addrStr, INET_ADDRSTRLEN)) {
+                QString ipStr = QString::fromLatin1(addrStr);
+                if (!ipStr.isEmpty() && !ipStr.startsWith("127.")) {
+                    QVariantMap hostDev;
+#if defined(Q_OS_MACOS)
+                    hostDev["name"] = "MacBook Air (NOC Host)";
+                    hostDev["type"] = "Laptop";
+                    hostDev["icon"] = "laptop";
+#elif defined(Q_OS_LINUX)
+                    hostDev["name"] = "Raspberry Pi (Nexus NOC)";
+                    hostDev["type"] = "Server";
+                    hostDev["icon"] = "server";
+#else
+                    hostDev["name"] = "Nexus NOC Appliance";
+                    hostDev["type"] = "Server";
+                    hostDev["icon"] = "server";
+#endif
+                    hostDev["ip"] = ipStr;
+                    hostDev["mac"] = "LOCAL-HOST";
+                    hostDev["connection"] = (name.startsWith("eth") || name.startsWith("en1") || name.startsWith("en2")) ? "Ethernet" : "Wi-Fi";
+                    hostDev["lastSeen"] = "Now";
+                    hostDev["online"] = true;
+                    hostDev["blocked"] = false;
+                    m_knownDevices[hostDev["mac"].toString()] = hostDev;
+                    m_devices.append(hostDev);
+                    break;
+                }
+            }
+        }
+        freeifaddrs(ifap);
+    }
+#endif
 
     scanArpTable();
 
     connect(m_scanTimer, &QTimer::timeout, this, &DeviceManager::scanArpTable);
-    m_scanTimer->start(10000); // Scan ARP every 10s
+    m_scanTimer->start(5000); // Live scan every 5s
 }
 
 int DeviceManager::onlineDeviceCount() const
@@ -81,7 +99,7 @@ int DeviceManager::wifiClientCount() const
             count++;
         }
     }
-    return qMax(5, count);
+    return count;
 }
 
 int DeviceManager::ethernetClientCount() const
@@ -93,7 +111,7 @@ int DeviceManager::ethernetClientCount() const
             count++;
         }
     }
-    return qMax(2, count);
+    return count;
 }
 
 int DeviceManager::iotDeviceCount() const
@@ -105,7 +123,7 @@ int DeviceManager::iotDeviceCount() const
             count++;
         }
     }
-    return qMax(3, count);
+    return count;
 }
 
 void DeviceManager::refreshDevices()
@@ -159,9 +177,9 @@ void DeviceManager::scanArpTable()
                 } else if (host.contains("PlayStation", Qt::CaseInsensitive) || host.contains("Xbox", Qt::CaseInsensitive) || host.contains("Switch", Qt::CaseInsensitive) || host.contains("PS5", Qt::CaseInsensitive) || host.contains("PS4", Qt::CaseInsensitive)) {
                     type = "Console"; icon = "gamepad";
                 } else if (host.contains("Server", Qt::CaseInsensitive) || host.contains("NAS", Qt::CaseInsensitive)) {
-                    type = "Server"; icon = "server"; conn = "Ethernet";
+                    type = "Server"; icon = "server";
                 } else if (host.contains("lan", Qt::CaseInsensitive) || host.contains("dsl", Qt::CaseInsensitive) || ip.endsWith(".1") || ip.endsWith(".254")) {
-                    type = "Gateway"; icon = "router"; conn = "Ethernet";
+                    type = "Gateway"; icon = "router";
                 }
 
                 QVariantMap dev;
