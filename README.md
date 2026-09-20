@@ -22,7 +22,8 @@
 
 <br/><br/>
 
-[![Nexus NOC Main Console](docs/screenshots/01_overview_dashboard.png)](https://github.com/skrehanahamed/Nexus_NOC)
+<img width="2940" height="1852" alt="image" src="https://github.com/user-attachments/assets/cdff036a-8938-41c0-8198-5aa503f729d7" />
+
 
 *Real-Time Operations & Control Console displaying live network telemetry, hardware resources, gateway diagnostics, and interactive topology map.*
 
