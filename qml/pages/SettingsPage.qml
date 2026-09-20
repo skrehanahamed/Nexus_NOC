@@ -1,3 +1,12 @@
+/**
+ * ============================================================================
+ * Nexus NOC - Enterprise Network Operations Center Appliance
+ * Copyright (c) 2026 Sk Rehan Ahamed
+ * Developer: Sk Rehan Ahamed (https://github.com/skrehanahamed)
+ * Licensed under the MIT License
+ * ============================================================================
+ */
+
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
@@ -292,6 +301,74 @@ Flickable {
                             font.letterSpacing: 0.8
                             color: Theme.statusCritical
                         }
+                    }
+                }
+            }
+        }
+
+        // Section 4: About Appliance & Developer
+        StatusCard {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 110
+            title: "About Nexus NOC Appliance"
+            subtitle: "System Version & Developer Credits"
+            showHeader: true
+
+            RowLayout {
+                anchors.fill: parent
+                spacing: 24
+
+                ColumnLayout {
+                    spacing: 4
+                    Layout.fillWidth: true
+                    Text {
+                        text: "DEVELOPER & ARCHITECT"
+                        font.pixelSize: 10
+                        font.bold: true
+                        font.family: Theme.fontMono
+                        color: Theme.textSecondary
+                    }
+                    Text {
+                        text: "Sk Rehan Ahamed"
+                        font.pixelSize: 14
+                        font.bold: true
+                        color: Theme.accentCyan
+                    }
+                }
+
+                ColumnLayout {
+                    spacing: 4
+                    Layout.fillWidth: true
+                    Text {
+                        text: "APPLIANCE BUILD"
+                        font.pixelSize: 10
+                        font.bold: true
+                        font.family: Theme.fontMono
+                        color: Theme.textSecondary
+                    }
+                    Text {
+                        text: "v1.0.0 Enterprise"
+                        font.pixelSize: 14
+                        font.bold: true
+                        color: Theme.textPrimary
+                    }
+                }
+
+                ColumnLayout {
+                    spacing: 4
+                    Layout.fillWidth: true
+                    Text {
+                        text: "LICENSE"
+                        font.pixelSize: 10
+                        font.bold: true
+                        font.family: Theme.fontMono
+                        color: Theme.textSecondary
+                    }
+                    Text {
+                        text: "MIT Open Source"
+                        font.pixelSize: 14
+                        font.bold: true
+                        color: Theme.accentEmerald
                     }
                 }
             }

@@ -1,3 +1,12 @@
+/**
+ * ============================================================================
+ * Nexus NOC - Enterprise Network Operations Center Appliance
+ * Copyright (c) 2026 Sk Rehan Ahamed
+ * Developer: Sk Rehan Ahamed (https://github.com/skrehanahamed)
+ * Licensed under the MIT License
+ * ============================================================================
+ */
+
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Effects

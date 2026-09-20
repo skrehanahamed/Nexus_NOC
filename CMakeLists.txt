@@ -1,3 +1,10 @@
+# ============================================================================
+# Nexus NOC - Enterprise Network Operations Center Appliance
+# Copyright (c) 2026 Sk Rehan Ahamed
+# Developer: Sk Rehan Ahamed (https://github.com/skrehanahamed)
+# Licensed under the MIT License
+# ============================================================================
+
 cmake_minimum_required(VERSION 3.20)
 
 project(NexusNOC VERSION 1.0.0 LANGUAGES CXX)
