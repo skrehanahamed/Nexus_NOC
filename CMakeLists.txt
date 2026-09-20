@@ -7,7 +7,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(Qt6 6.5 REQUIRED COMPONENTS Core Gui Quick QuickControls2)
 
-qt_policy(SET QTP0004 OLD)
+if(QT_KNOWN_POLICY_QTP0004)
+    qt_policy(SET QTP0004 NEW)
+endif()
 
 qt_standard_project_setup(REQUIRES 6.5)
 
