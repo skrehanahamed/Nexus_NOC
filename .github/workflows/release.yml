@@ -206,9 +206,80 @@ jobs:
           name: windows-release-pkg
           path: release-assets/
 
-      - name: List Release Assets
+      - name: Generate Comprehensive Release Notes & Checksums
         run: |
-          ls -la release-assets/
+          TAG="${{ github.ref_name || inputs.tag_name || 'v1.0.0' }}"
+          
+          # Generate SHA256 checksums file inside release-assets
+          cd release-assets
+          sha256sum * > SHA256SUMS.txt
+          cd ..
+          
+          cat << EOF > release-notes.md
+          ## 🌐 Nexus NOC Production Release (${TAG})
+          
+          **Nexus NOC (Network Operations Center)** is an enterprise hardware-tailored appliance console built with **C++17** and **Qt 6 / QML**. This release includes standalone pre-packaged binaries for **macOS**, **Ubuntu Linux**, and **Windows**.
+
+          ---
+
+          ### 📦 Pre-Built Release Packages
+
+          | Platform | Package File | Architecture | Toolchain / Environment |
+          | :--- | :--- | :--- | :--- |
+          | **macOS** | \`NexusNOC-\${TAG}-macOS.zip\` | Universal (Apple Silicon & Intel) | AppleClang, Qt 6.x (Bundled via macdeployqt) |
+          | **Ubuntu / Linux** | \`NexusNOC-\${TAG}-Ubuntu-x86_64.tar.gz\` | Linux x86_64 | GNU GCC 11+, Qt 6.6.2 (Self-contained launcher) |
+          | **Windows** | \`NexusNOC-\${TAG}-Windows-x64.zip\` | Windows x64 | MSVC 2019/2022, Qt 6.6.2 (Bundled via windeployqt) |
+
+          ---
+
+          ### 🚀 Quick Start & Installation
+
+          ####  macOS
+          1. Download \`NexusNOC-\${TAG}-macOS.zip\` and extract it.
+          2. Open Terminal and run:
+             \`\`\`bash
+             cd NexusNOC-macOS
+             ./NexusNOC
+             \`\`\`
+          > **Tip:** If macOS Gatekeeper prompts an unverified developer warning, run:  
+          > \`xattr -cr NexusNOC-macOS\`
+
+          #### 🐧 Ubuntu / Linux
+          1. Download \`NexusNOC-\${TAG}-Ubuntu-x86_64.tar.gz\` and extract it:
+             \`\`\`bash
+             tar -xzf NexusNOC-\${TAG}-Ubuntu-x86_64.tar.gz
+             cd NexusNOC-Ubuntu-x86_64
+             ./run.sh
+             \`\`\`
+
+          #### 🪟 Windows (10 / 11)
+          1. Download and unzip \`NexusNOC-\${TAG}-Windows-x64.zip\`.
+          2. Double-click \`NexusNOC.exe\` to launch the console.
+
+          ---
+
+          ### 🔒 Checksums (SHA-256)
+
+          Verify package integrity using the computed SHA-256 checksums:
+
+          \`\`\`text
+          EOF
+
+          cat release-assets/SHA256SUMS.txt >> release-notes.md
+
+          cat << 'EOF' >> release-notes.md
+          ```
+
+          ---
+
+          ### 🛠️ Build & Architecture Info
+          - **UI Framework:** Qt 6 (Qt Quick, QML, QtQuick Controls 2, QtQuick Layouts)
+          - **Language Standard:** C++17
+          - **Build System:** CMake 3.20+ & Ninja
+          - **Native Performance:** Fully compiled native binaries with hardware-accelerated rendering
+          - **Architect & Developer:** [Sk Rehan Ahamed](https://github.com/skrehanahamed)
+          - **License:** [MIT License](LICENSE)
+          EOF
 
       - name: Create GitHub Release & Upload Assets
         uses: softprops/action-gh-release@v2
@@ -217,7 +288,7 @@ jobs:
           name: Nexus NOC ${{ github.ref_name || inputs.tag_name || 'v1.0.0' }} Production Release
           draft: false
           prerelease: false
-          generate_release_notes: true
+          body_path: release-notes.md
           files: |
             release-assets/*
         env:

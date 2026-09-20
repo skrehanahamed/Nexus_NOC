@@ -152,9 +152,9 @@ Official standalone production packages are automatically built and verified for
 
 | Platform | Package Archive | Architecture | Status |
 | :--- | :--- | :--- | :--- |
-|  **macOS** | [`NexusNOC-v1.0.0-macOS.zip`](https://github.com/skrehanahamed/Nexus_NOC/releases) | Universal (Apple Silicon M-Series & Intel x86_64) | [![macOS CI](https://img.shields.io/badge/macOS-Passing-brightgreen.svg?style=flat-square&logo=apple)](.github/workflows/build-macos.yml) |
-| 🐧 **Ubuntu / Linux** | [`NexusNOC-v1.0.0-Ubuntu-x86_64.tar.gz`](https://github.com/skrehanahamed/Nexus_NOC/releases) | Linux x86_64 (Ubuntu 22.04 / 24.04+) | [![Ubuntu CI](https://img.shields.io/badge/Ubuntu-Passing-brightgreen.svg?style=flat-square&logo=ubuntu)](.github/workflows/build-ubuntu.yml) |
-| 🪟 **Windows** | [`NexusNOC-v1.0.0-Windows-x64.zip`](https://github.com/skrehanahamed/Nexus_NOC/releases) | Windows x64 (MSVC 2019 / 2022 Runtime) | [![Windows CI](https://img.shields.io/badge/Windows-Passing-brightgreen.svg?style=flat-square&logo=windows)](.github/workflows/build-windows.yml) |
+| <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/apple/apple-original.svg" width="18" height="18" valign="middle" alt="macOS" /> **macOS** | [`NexusNOC-v1.0.0-macOS.zip`](https://github.com/skrehanahamed/Nexus_NOC/releases) | Universal (Apple Silicon M-Series & Intel x86_64) | [![macOS CI](https://img.shields.io/badge/macOS-Passing-brightgreen.svg?style=flat-square&logo=apple)](.github/workflows/build-macos.yml) |
+| <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/linux/linux-original.svg" width="18" height="18" valign="middle" alt="Linux" /> **Ubuntu / Linux** | [`NexusNOC-v1.0.0-Ubuntu-x86_64.tar.gz`](https://github.com/skrehanahamed/Nexus_NOC/releases) | Linux x86_64 (Ubuntu 22.04 / 24.04+) | [![Ubuntu CI](https://img.shields.io/badge/Ubuntu-Passing-brightgreen.svg?style=flat-square&logo=ubuntu)](.github/workflows/build-ubuntu.yml) |
+| <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/windows8/windows8-original.svg" width="18" height="18" valign="middle" alt="Windows" /> **Windows** | [`NexusNOC-v1.0.0-Windows-x64.zip`](https://github.com/skrehanahamed/Nexus_NOC/releases) | Windows x64 (MSVC 2019 / 2022 Runtime) | [![Windows CI](https://img.shields.io/badge/Windows-Passing-brightgreen.svg?style=flat-square&logo=windows)](.github/workflows/build-windows.yml) |
 
 > [!TIP]
 > Visit the [**GitHub Releases Page**](https://github.com/skrehanahamed/Nexus_NOC/releases) to download the latest builds, view checksums, and check release notes.
@@ -169,7 +169,7 @@ Official standalone production packages are automatically built and verified for
 - **Qt 6** (6.5 or newer with `Core`, `Gui`, `Quick`, `QuickControls2`)
 - **Ninja** build tool (recommended)
 
-### macOS (Homebrew)
+### <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/apple/apple-original.svg" width="18" height="18" valign="middle" alt="macOS" /> macOS (Homebrew)
 ```bash
 # 1. Install prerequisites via Homebrew
 brew install qt cmake ninja
@@ -189,7 +189,7 @@ cmake --build build --config Release
 ./build/bin/NexusNOC
 ```
 
-### Ubuntu / Debian Linux
+### <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/linux/linux-original.svg" width="18" height="18" valign="middle" alt="Linux" /> Ubuntu / Debian Linux
 ```bash
 # 1. Install Qt 6 and development packages
 sudo apt update
@@ -210,7 +210,7 @@ cmake --build build --config Release
 ./build/bin/NexusNOC
 ```
 
-### Windows (MSVC)
+### <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/windows8/windows8-original.svg" width="18" height="18" valign="middle" alt="Windows" /> Windows (MSVC)
 ```powershell
 # 1. Open Visual Studio Developer Command Prompt
 # 2. Clone and navigate to repository
